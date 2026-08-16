@@ -1,0 +1,39 @@
+diff --git a/keyboards/framework/factory.c b/keyboards/framework/factory.c
+index 43890d21..2013b04d 100644
+--- a/keyboards/framework/factory.c
++++ b/keyboards/framework/factory.c
+@@ -84,12 +84,22 @@ __attribute__ ((weak))
+ void enable_factory_mode(bool enable) {
+ }
+ 
++__attribute__ ((weak))
++bool handle_hid_user(uint8_t *data, uint8_t length) {
++    return false;
++}
++
+ bool handle_hid(uint8_t *data, uint8_t length) {
+     uint8_t command_id = data[0];
+     uint8_t *command_data = &(data[1]);
+ 
+     //uprintf("raw_hid_receive(command: %X, length: %d)\n", command_id, length);
+ 
++    // Give the keymap first look at the report.
++    if (handle_hid_user(data, length)) {
++        return true;
++    }
++
+     switch (command_id) {
+         case 0x01:
+             print("protocol_ver\n");
+diff --git a/keyboards/framework/factory.h b/keyboards/framework/factory.h
+index 499d3888..049f7dbb 100644
+--- a/keyboards/framework/factory.h
++++ b/keyboards/framework/factory.h
+@@ -4,3 +4,7 @@
+ #pragma once
+ 
+ void enable_factory_mode(bool enable);
++
++// Weak hook for keymap-level raw HID commands. Return true to consume the
++// report; the default implementation returns false.
++bool handle_hid_user(uint8_t *data, uint8_t length);
